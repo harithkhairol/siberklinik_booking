@@ -150,7 +150,7 @@
                         </div>
                     </div>
 
-                    <h1 class="font-semibold text-xl px-1 py-2 lg:py-3 mb-2 ml-2 flex-auto pt-1.5 mt-4">Choose Available Time</h1>
+                    <h1 class="font-semibold text-xl px-1 py-2 lg:py-3 mb-2 ml-2 flex-auto pt-1.5 mt-4">Choose Available Time <span class="text-lg font-light">({{ date('D', strtotime($date)).', '.date('d/m/Y', strtotime($date)) }})</span> </h1>
 
                     <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                         <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
@@ -163,13 +163,23 @@
 
                                             <div class="flex space-x-2">
 
-                                                @foreach ($timeslots as $timeslot) 
+                                                <form action="{{ route('appointment.book.confirm') }}">
 
-                                                    <button class="rounded-full py-1 px-3 bg-white border border-blue-400 text-blue-400 font-bold hover:bg-blue-700 hover:text-white hover:border-blue-700">
-                                                        {{ date('G:i', strtotime($timeslot)) }}
-                                                    </button>
+                                                    <input type="hidden" name="type" id="type" value="{{ $type }}">
+                                                    <input type="hidden" id="category" name="category" value="{{ $category }}">
+                                                    <input type="hidden" name="title" id="title" value="{{ $title }}">
+                                                    <input type="hidden" name="description" id="description" value="{{ $description }}">
+                                                    <input type="hidden" name="date" id="date" value="{{ $date }}">
 
-                                                @endforeach 
+                                                    @foreach ($available_timeslots as $timeslot) 
+
+                                                        <button name="time" id="time" Type="submit" class="rounded-full py-1 px-3 bg-white border border-blue-400 text-blue-400 font-bold hover:bg-blue-700 hover:text-white hover:border-blue-700" value="{{ $timeslot }}">
+                                                            {{ date('G:i', strtotime($timeslot)) }}
+                                                        </button>
+
+                                                    @endforeach 
+
+                                                </form>
 
                                             </div>
 

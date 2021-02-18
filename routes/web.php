@@ -33,3 +33,7 @@ Route::get('/book', [AppointmentController::class, 'book'])->name('appointment.b
 Route::get('/book/date', [AppointmentController::class, 'bookDate'])->name('appointment.book.date');
 
 Route::get('/book/date/time', [AppointmentController::class, 'bookTime'])->name('appointment.book.time');
+
+Route::get('/book/confirm', [AppointmentController::class, 'confirm'])->name('appointment.book.confirm');
+
+Route::post('/book/store', [AppointmentController::class, 'store'])->name('appointment.store');
