@@ -16,39 +16,108 @@
 
     <div class="w-full flex-wrap md:flex-none flex bg-gray-50 space-y-2 lg:space-y-0 lg:space-x-2">
 
-        <div class="w-full lg:w-auto shadow flex-initial rounded-md py-5 bg-white space-y-3 p-3 md:p-6 max-h-28 text-gray-900">
-            <h1 class="font-semibold text-xl">Today</h1>
+        <div class="w-full xl:w-1/3 space-y-1 xl:space-y-0 xl:flex xl:space-x-2">
 
-            <div class="flex space-x-6">
+            <div class="w-full lg:w-1/2 shadow flex-initial rounded-md py-5 bg-white space-y-3 p-3 md:p-6 min-h-28 text-gray-900">
+                <h1 class="font-semibold text-xl">Today</h1>
 
-                <div class="flex-initial">
-                    <h2>Data Breach</h2>
-                </div>
-
-                <div class="flex-initial">
-                    <h2>9:00</h2>
-                </div>
                 
-            </div>
-
-        </div>
-
-        <div class="w-full lg:w-auto shadow flex-initial rounded-md py-5 bg-white space-y-3 p-3 md:p-6 max-h-28 text-gray-900">
-            <h1 class="font-semibold text-xl">Next</h1>
-
-            <div class="flex space-x-6">
-
-                <div class="flex-initial">
-                    <h2>Virus Data Lost</h2>
-                </div>
-
-                <div class="flex-initial">
-                    <h2>10:00</h2>
-                </div>
                 
-            </div>
+                @forelse ($appointment_today as $appointment)
+
+                    <div class="flex space-x-6">
+
+                        <div class="flex-initial">
+                            <h2>{{ $appointment->title }}</h2>
+                        </div>
+
+                        <div class="flex-initial">
+                            <h2>{{ date('G:i', strtotime($appointment->time)) }}</h2>
+                        </div>
+
+                    </div>
+
+                @empty
+
+                    <div class="flex space-x-6">
+
+                        <div class="flex-initial">
+                            <h2>No appointment..</h2>
+                        </div>
+
             
-        </div>
+                    </div>
+
+                @endforelse
+
+                
+
+            </div>
+
+            <div class="w-full lg:w-1/2 shadow flex-initial rounded-md py-5 bg-white space-y-3 p-3 md:p-6 min-h-28 text-gray-900">
+                <h1 class="font-semibold text-xl">Next</h1>
+
+                <div class="flex space-x-6">
+
+
+                    <div class="flex-initial">
+                        <h2>
+
+                        @if(isset($appointment_next))
+
+                            <!-- {{ date('d/m/Y', strtotime($appointment_next_date->date)) }} -->
+                            {{ $appointment_next_date->date}}
+                        
+                        @else
+
+                            No Upcoming Appointment
+
+                        @endif
+                        
+                        </h2>
+                    </div>
+
+        
+                    
+                </div>
+
+                @if(isset($appointment_next))
+
+                    @forelse ($appointment_next as $appointment)
+
+                        <div class="flex space-x-6">
+
+                            <div class="flex-initial">
+                                <h2>{{ $appointment->title }}</h2>
+                            </div>
+
+                            <div class="flex-initial">
+                                <h2>{{ date('G:i', strtotime($appointment->time)) }}</h2>
+                            </div>
+
+                        </div>
+
+                    @empty
+
+                        <div class="flex space-x-6">
+
+                            <div class="flex-initial">
+                                <h2>No appointment..</h2>
+                            </div>
+
+                
+                        </div>
+
+                    @endforelse
+
+
+                @endif
+
+
+            </div>
+
+        </div>        
+        
 
     </div>
 
@@ -60,16 +129,13 @@
         <div class="w-full px-0 mb-2">
             <div class="w-full lg:w-1/3">
                 <div class="mt-1 relative rounded-md shadow-sm">
-                    <input type="text" name="price" id="price" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-base" placeholder="Search..">
-                    <button class="bg-blue-500 text-white absolute inset-y-0 right-0 flex items-center z-10 rounded-r-md p-3">
-                        <label for="currency" class="sr-only">Currency</label>
-                        <i data-feather="search"></i>
-                        <!-- <select id="currency" name="currency" class="focus:ring-indigo-500 focus:border-indigo-500 h-full py-0 pl-2 pr-7 border-transparent bg-transparent text-gray-500 sm:text-sm rounded-md">
-                        <option>USD</option>
-                        <option>CAD</option>
-                        <option>EUR</option>
-                        </select> -->
-                    </button>
+                    <form class="form-header" action="{{ route('appointment.schedule') }}" method="GET">
+                        <input type="text" name="search" id="search" value="{{  Request::get('search') ? Request::get('search') : '' }}" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-base" placeholder="Search..">
+                        <button type="submit" class="bg-blue-500 text-white absolute inset-y-0 right-0 flex items-center z-10 rounded-r-md p-3">
+                            <label for="search" class="sr-only">Search</label>
+                            <i data-feather="search"></i>
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -107,471 +173,65 @@
                         </thead>
                         <tbody class="divide-y divide-gray-200">
 
-                            <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    1
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    12/04/2021
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    9:00
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">                                    
-                                        <div>
-                                            <div class="text-sm text-gray-900">
-                                                Jane Cooper
-                                            </div>
-                                            <div class="text-sm text-gray-500">
-                                                01X-XXXXXXX
+
+                            @forelse ($appointment_upcoming as $appointment)
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ $loop->iteration + (($appointment_upcoming->currentPage()-1) * $appointment_upcoming->perPage()) }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <!-- {{ date('d/m/Y', strtotime($appointment->date)) }} -->
+                                        {{ $appointment->date }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ date('G:i', strtotime($appointment->time))}}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">                                    
+                                            <div>
+                                                <div class="text-sm text-gray-900">
+                                                    {{ $appointment->doctor_name }}
+                                                </div>
+                                                <div class="text-sm text-gray-500">
+                                                    {{ $appointment->phone_no }}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </td>
+                                    </td>
+                                    
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ $appointment->type }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <!-- <div class="text-sm text-gray-500">Virus Data Lost</div> -->
+                                        <div class="text-sm text-gray-900">{{ $appointment->title }}</div>
+                                        <div class="text-sm text-gray-500">{{ $appointment->category }}</div>
+                                    </td>
+                                    <td class="flex px-6 py-6 whitespace-nowrap text-right text-sm font-medium space-x-3 items-center">
+                                        <a href="{{ route('appointment.show', [$appointment->id, $appointment->title]) }}" class="text-blue-500 hover:text-blue-900"><i data-feather="edit"></i></a>
+                                        <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="x-circle"></i></a>
+                        
+                                    </td>
                                 
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    Cyber Practice
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <!-- <div class="text-sm text-gray-500">Virus Data Lost</div> -->
-                                    <div class="text-sm text-gray-900">Virus Data Lost</div>
-                                    <div class="text-sm text-gray-500">Consultation</div>
-                                </td>
+                                </tr>
 
-                                <td class="flex px-6 py-6 whitespace-nowrap text-right text-sm font-medium space-x-3 items-center">
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="edit"></i></a>
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="x-circle"></i></a>
-                    
-                                </td>
-                            
-                            </tr>
+                            @empty
 
-                            <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    2
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    12/04/2021
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    10:00
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">                                    
-                                        <div>
-                                            <div class="text-sm text-gray-900">
-                                                Jane Cooper
-                                            </div>
-                                            <div class="text-sm text-gray-500">
-                                                01X-XXXXXXX
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    Cyber Practice
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <!-- <div class="text-sm text-gray-500">Virus Data Lost</div> -->
-                                    <div class="text-sm text-gray-900">Virus Data Lost</div>
-                                    <div class="text-sm text-gray-500">Consultation</div>
-                                </td>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        No Upcoming Appointment
+                                    </td>
+                                </tr>
 
-                                <td class="flex px-6 py-6 whitespace-nowrap text-right text-sm font-medium space-x-3 items-center">
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="edit"></i></a>
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="x-circle"></i></a>
-                    
-                                </td>
-                            
-                            </tr>
+                            @endforelse
 
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    3
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    12/04/2021
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    11:00
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">                                    
-                                        <div>
-                                            <div class="text-sm text-gray-900">
-                                                Jane Cooper
-                                            </div>
-                                            <div class="text-sm text-gray-500">
-                                                01X-XXXXXXX
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    Cyber Practice
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <!-- <div class="text-sm text-gray-500">Virus Data Lost</div> -->
-                                    <div class="text-sm text-gray-900">Virus Data Lost</div>
-                                    <div class="text-sm text-gray-500">Consultation</div>
-                                </td>
-
-                                <td class="flex px-6 py-6 whitespace-nowrap text-right text-sm font-medium space-x-3 items-center">
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="edit"></i></a>
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="x-circle"></i></a>
-                    
-                                </td>
-                            
-                            </tr>
-
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    4
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    12/04/2021
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    12:00
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">                                    
-                                        <div>
-                                            <div class="text-sm text-gray-900">
-                                                Jane Cooper
-                                            </div>
-                                            <div class="text-sm text-gray-500">
-                                                01X-XXXXXXX
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    Cyber Practice
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <!-- <div class="text-sm text-gray-500">Virus Data Lost</div> -->
-                                    <div class="text-sm text-gray-900">Virus Data Lost</div>
-                                    <div class="text-sm text-gray-500">Consultation</div>
-                                </td>
-
-                                <td class="flex px-6 py-6 whitespace-nowrap text-right text-sm font-medium space-x-3 items-center">
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="edit"></i></a>
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="x-circle"></i></a>
-                    
-                                </td>
-                            
-                            </tr>
-
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    5
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    12/04/2021
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    13:00
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">                                    
-                                        <div>
-                                            <div class="text-sm text-gray-900">
-                                                Jane Cooper
-                                            </div>
-                                            <div class="text-sm text-gray-500">
-                                                01X-XXXXXXX
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    Cyber Practice
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <!-- <div class="text-sm text-gray-500">Virus Data Lost</div> -->
-                                    <div class="text-sm text-gray-900">Virus Data Lost</div>
-                                    <div class="text-sm text-gray-500">Consultation</div>
-                                </td>
-
-                                <td class="flex px-6 py-6 whitespace-nowrap text-right text-sm font-medium space-x-3 items-center">
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="edit"></i></a>
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="x-circle"></i></a>
-                    
-                                </td>
-                            
-                            </tr>
-
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    6
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    12/04/2021
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    14:00
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">                                    
-                                        <div>
-                                            <div class="text-sm text-gray-900">
-                                                Jane Cooper
-                                            </div>
-                                            <div class="text-sm text-gray-500">
-                                                01X-XXXXXXX
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    Cyber Practice
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <!-- <div class="text-sm text-gray-500">Virus Data Lost</div> -->
-                                    <div class="text-sm text-gray-900">Virus Data Lost</div>
-                                    <div class="text-sm text-gray-500">Consultation</div>
-                                </td>
-
-                                <td class="flex px-6 py-6 whitespace-nowrap text-right text-sm font-medium space-x-3 items-center">
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="edit"></i></a>
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="x-circle"></i></a>
-                    
-                                </td>
-                            
-                            </tr>
-
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    7
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    12/04/2021
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    15:00
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">                                    
-                                        <div>
-                                            <div class="text-sm text-gray-900">
-                                                Jane Cooper
-                                            </div>
-                                            <div class="text-sm text-gray-500">
-                                                01X-XXXXXXX
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    Cyber Practice
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <!-- <div class="text-sm text-gray-500">Virus Data Lost</div> -->
-                                    <div class="text-sm text-gray-900">Virus Data Lost</div>
-                                    <div class="text-sm text-gray-500">Consultation</div>
-                                </td>
-
-                                <td class="flex px-6 py-6 whitespace-nowrap text-right text-sm font-medium space-x-3 items-center">
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="edit"></i></a>
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="x-circle"></i></a>
-                    
-                                </td>
-                            
-                            </tr>
-
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    8
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    12/04/2021
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    16:00
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">                                    
-                                        <div>
-                                            <div class="text-sm text-gray-900">
-                                                Jane Cooper
-                                            </div>
-                                            <div class="text-sm text-gray-500">
-                                                01X-XXXXXXX
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    Cyber Practice
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <!-- <div class="text-sm text-gray-500">Virus Data Lost</div> -->
-                                    <div class="text-sm text-gray-900">Virus Data Lost</div>
-                                    <div class="text-sm text-gray-500">Consultation</div>
-                                </td>
-
-                                <td class="flex px-6 py-6 whitespace-nowrap text-right text-sm font-medium space-x-3 items-center">
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="edit"></i></a>
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="x-circle"></i></a>
-                    
-                                </td>
-                            
-                            </tr>
-
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    9
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    13/04/2021
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    16:00
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">                                    
-                                        <div>
-                                            <div class="text-sm text-gray-900">
-                                                Jane Cooper
-                                            </div>
-                                            <div class="text-sm text-gray-500">
-                                                01X-XXXXXXX
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    Cyber Practice
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <!-- <div class="text-sm text-gray-500">Virus Data Lost</div> -->
-                                    <div class="text-sm text-gray-900">Virus Data Lost</div>
-                                    <div class="text-sm text-gray-500">Consultation</div>
-                                </td>
-
-                                <td class="flex px-6 py-6 whitespace-nowrap text-right text-sm font-medium space-x-3 items-center">
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="edit"></i></a>
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="x-circle"></i></a>
-                    
-                                </td>
-                            
-                            </tr>
-
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    10
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    13/04/2021
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    16:00
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">                                    
-                                        <div>
-                                            <div class="text-sm text-gray-900">
-                                                Jane Cooper
-                                            </div>
-                                            <div class="text-sm text-gray-500">
-                                                01X-XXXXXXX
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    Cyber Practice
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <!-- <div class="text-sm text-gray-500">Virus Data Lost</div> -->
-                                    <div class="text-sm text-gray-900">Virus Data Lost</div>
-                                    <div class="text-sm text-gray-500">Consultation</div>
-                                </td>
-
-                                <td class="flex px-6 py-6 whitespace-nowrap text-right text-sm font-medium space-x-3 items-center">
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="edit"></i></a>
-                                    <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="x-circle"></i></a>
-                    
-                                </td>
-                            
-                            </tr>
 
                         <!-- More items... -->
                     </tbody>
                     </table>
 
-                    <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                    <div class="flex-1 flex justify-between sm:hidden">
-                        <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:text-gray-500">
-                        Previous
-                        </a>
-                        <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:text-gray-500">
-                        Next
-                        </a>
-                    </div>
-                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                        <div>
-                        <p class="text-sm text-gray-700">
-                            Showing
-                            <span class="font-medium">1</span>
-                            to
-                            <span class="font-medium">10</span>
-                            of
-                            <span class="font-medium">97</span>
-                            results
-                        </p>
-                        </div>
-                        <div>
-                        <nav class="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
-                            <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                            <span class="sr-only">Previous</span>
-                            <!-- Heroicon name: chevron-left -->
-                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                            </svg>
-                            </a>
-                            <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            1
-                            </a>
-                            <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            2
-                            </a>
-                            <a href="#" class="hidden md:inline-flex relative items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            3
-                            </a>
-                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                            ...
-                            </span>
-                            <a href="#" class="hidden md:inline-flex relative items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            8
-                            </a>
-                            <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            9
-                            </a>
-                            <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            10
-                            </a>
-                            <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                            <span class="sr-only">Next</span>
-                            <!-- Heroicon name: chevron-right -->
-                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                            </svg>
-                            </a>
-                        </nav>
-                        </div>
-                    </div>
+                    <div class="bg-white px-4 py-3 items-center justify-between border-t border-gray-200 sm:px-6">
+                        {{ $appointment_upcoming->links() }}
                     </div>
                 </div>
             </div>

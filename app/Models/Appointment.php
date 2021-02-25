@@ -21,4 +21,9 @@ class Appointment extends Model
         'time',
     ];
 
+    public function doctor()
+    {
+        return $this->hasOne('App\Models\Doctor', 'id', 'doctor_id');
+    }
+
 }

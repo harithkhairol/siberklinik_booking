@@ -37,3 +37,5 @@ Route::get('/book/date/time', [AppointmentController::class, 'bookTime'])->name(
 Route::get('/book/confirm', [AppointmentController::class, 'confirm'])->name('appointment.book.confirm');
 
 Route::post('/book/store', [AppointmentController::class, 'store'])->name('appointment.store');
+
+Route::get('/appointment/{id}/{title}', [AppointmentController::class, 'show'])->name('appointment.show');

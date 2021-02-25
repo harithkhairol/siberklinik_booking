@@ -58,7 +58,7 @@
 
                                 </div>
 
-                                <div class="col-span-6 sm:col-span-4">
+                                    <div class="col-span-6 sm:col-span-4">
                                         <label for="title" class="block text-sm font-medium text-gray-700 pb-1">Title</label>
                                         <input type="text" name="title" id="title" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-base" required>
                                     </div>

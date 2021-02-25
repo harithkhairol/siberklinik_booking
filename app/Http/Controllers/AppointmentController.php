@@ -25,7 +25,50 @@ class AppointmentController extends Controller
      */
     public function schedule()
     {
-        return view('appointment.schedule');
+        $appointments = Appointment::where('user_id', Auth::user()->id)->first();
+         
+        $appointment_today = Appointment::where('user_id', Auth::user()->id)->where('date', now())->orderBy('time', 'asc')->get();
+
+        if(isset($_GET['search'])) {
+
+            $appointment_upcoming = Appointment::join(env('DB_DATABASE2').'.users', 'appointments.doctor_id', '=', 'users.id')
+                     ->select('appointments.*', 'users.name', 'users.phone_no')
+                     ->where('user_id', Auth::user()->id)
+                     ->where('date','>', now())
+                     ->where(function ($query) {
+                        $query->where('appointments.type', 'LIKE', '%' . $_GET['search'] . '%')
+                            ->orWhere('date', 'LIKE', '%' . $_GET['search'] . '%')
+                            ->orWhere('title', 'LIKE', '%' . $_GET['search'] . '%')
+                            ->orWhere('category', 'LIKE', '%' . $_GET['search'] . '%')
+                            ->orWhere('name', 'LIKE', '%' . $_GET['search'] . '%')
+                            ->orWhere('phone_no', 'LIKE', '%' . $_GET['search'] . '%');
+                    })->orderBy('time', 'asc')->paginate(10);
+
+        }
+        else{
+
+            $appointment_upcoming = Appointment::join(env('DB_DATABASE2').'.users', 'appointments.doctor_id', '=', 'users.id')
+                     ->select('appointments.*', 'users.name', 'users.phone_no')
+                     ->where('user_id', Auth::user()->id)->where('date', '>', now())->orderBy('time', 'asc')->paginate(10);
+
+        }
+
+        $appointment_next_date = Appointment::where('user_id', Auth::user()->id)->where('date', '>', now())->first();
+        
+
+        if(isset($appointment_next_date)){
+            
+            $appointment_next = Appointment::where('user_id', Auth::user()->id)->where('date',  $appointment_next_date->date)->orderBy('time', 'asc')->get();  
+
+        }
+
+        else{
+
+            $appointment_next = null;
+
+        }
+
+        return view('appointment.schedule', compact('appointments', 'appointment_today', 'appointment_next', 'appointment_next_date', 'appointment_upcoming'));
     }
 
     public function history()
@@ -220,9 +263,11 @@ class AppointmentController extends Controller
      * @param  \App\Models\Appointment  $appointment
      * @return \Illuminate\Http\Response
      */
-    public function show(Appointment $appointment)
+    public function show($id, $title)
     {
-        //
+        $appointment = Appointment::where('id', $id)->first();
+
+        return view('appointment.show', compact('appointment'));
     }
 
     /**
