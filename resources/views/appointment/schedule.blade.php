@@ -65,8 +65,8 @@
 
                         @if(isset($appointment_next))
 
-                            <!-- {{ date('d/m/Y', strtotime($appointment_next_date->date)) }} -->
-                            {{ $appointment_next_date->date}}
+                            {{ date('d/m/Y', strtotime($appointment_next_date->date)) }}
+                            <!-- {{ $appointment_next_date->date}} -->
                         
                         @else
 

@@ -145,7 +145,7 @@ class AppointmentController extends Controller
             return back()->with('error', 'Appointment is fully booked on '.date('d/m/Y', strtotime($date)).'!');
         }
 
-        return view('appointment.book-time', compact('type', 'category', 'title', 'description', 'date', 'available_days', 'day', 'available_timeslots'));
+        return view('appointment.book-date', compact('type', 'category', 'title', 'description', 'date', 'available_days', 'day', 'available_timeslots'));
     }
 
     public function confirm(Request $request)
@@ -288,9 +288,176 @@ class AppointmentController extends Controller
      * @param  \App\Models\Appointment  $appointment
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Appointment $appointment)
+    public function update(Request $request, $id)
     {
-        //
+        $validator = $request->validate([
+            'type' => 'required',
+            'category' => 'required',
+            'title' => 'required',
+            'description' => 'required',
+        ]);
+
+        $type = $request->type;
+        $category = $request->category;
+        $title = $request->title;
+        $description = $request->description;
+        
+        $appointment = Appointment::where('id', $id)->first();
+
+        $appointment->type = $type;
+        $appointment->category = $category;
+        $appointment->title = $title;
+        $appointment->description = $description;
+
+        $appointment->save();
+
+        return back()->with('success', 'Appointment '.$title.' has been updated successfully!');
+        
+    }
+
+    public function rescheduleDate(Request $request, $id, $title)
+    {
+
+        $appointment = Appointment::where('id', $id)->first();
+
+        $available_days = TimeSlot::where('doctor_id', '!=' , 0)->select('day')->groupBy('day')->pluck('day');
+
+        return view('appointment.reschedule', compact('appointment', 'available_days'));
+        
+    }
+
+    public function rescheduleTime(Request $request, $id, $title)
+    {
+        $validator = $request->validate([
+            'type' => 'required',
+            'category' => 'required',
+            'title' => 'required',
+            'description' => 'required',
+            'date' => 'required',
+        ]);
+
+        $type = $request->type;
+        $category = $request->category;
+        $title = $request->title;
+        $description = $request->description;
+        $date = $request->date;
+
+        $appointment = Appointment::where('id', $id)->first();
+
+        $day = date('l', strtotime($date));
+
+        $available_days = TimeSlot::where('doctor_id', '!=' , 0)->select('day')->groupBy('day')->pluck('day');
+
+        $time_booked = Appointment::where('date', $date)->pluck('time');
+
+        if($day == "Saturday" || $day == "Sunday"){
+            return back()->with('error', 'No appointment for weekends!');
+        }
+
+        $timeslots = TimeSlot::where('doctor_id', '!=' , 0)
+                            ->where('day', $day)
+                            ->pluck('time');
+
+        $available_timeslots = TimeSlot::where('doctor_id', '!=' , 0)
+                            ->where('day', $day)
+                            ->whereNotIn('time', $time_booked)
+                            ->pluck('time');
+
+        if(count($timeslots) < 1){
+
+            return back()->with('error', 'Appointment is not available on '.$day.'!');
+
+        }
+
+        if(count($available_timeslots) < 1){
+            return back()->with('error', 'Appointment is fully booked on '.date('d/m/Y', strtotime($date)).'!');
+        }
+
+        return view('appointment.reschedule', compact('type', 'category', 'title', 'description', 'date', 'available_days', 'day', 'available_timeslots', 'appointment'));
+    }
+
+    public function reschedule(Request $request, $id)
+    {
+        
+        $validator = $request->validate([
+            'type' => 'required',
+            'category' => 'required',
+            'title' => 'required',
+            'description' => 'required',
+            'date' => 'required',
+            'time' => 'required',
+        ]);
+
+        $type = $request->type;
+        $category = $request->category;
+        $title = $request->title;
+        $description = $request->description;
+        $date = $request->date;
+        $time = $request->time;
+
+        
+
+        $day = date('l', strtotime($date));
+
+        $timeslot = TimeSlot::where('day', $day)
+                            ->where('time', $time)
+                            ->first();
+
+        $doctor = Doctor::where('id', $timeslot->doctor_id)->first();
+
+        $check_book = Appointment::where('date', $date)
+                                 ->where('time', $time)
+                                 ->get();
+
+        if(count($check_book) < 1){
+
+            $time_booked = Appointment::where('date', $date)->pluck('time');
+
+            $timeslots = TimeSlot::where('doctor_id', '!=' , 0)
+                            ->where('day', $day)
+                            ->pluck('time');
+
+            $available_timeslots = TimeSlot::where('doctor_id', '!=' , 0)
+                            ->where('day', $day)
+                            ->whereNotIn('time', $time_booked)
+                            ->pluck('time');
+
+            if(count($timeslots) < 1){
+
+                return redirect()->action(
+                    [AppointmentController::class, 'bookTime'], ['type' => $type, 'category' => $category, 'title' => $title, 'description' => $description, 'date' => $date, 'time' => $time]
+                )->with('error', 'Appointment has been booked on '.date('d/m/Y', strtotime($date)).' at '.date('G:i', strtotime($time)).'!');
+    
+            }
+    
+            if(count($available_timeslots) < 1){
+
+                return redirect()->action(
+                    [AppointmentController::class, 'bookDate'], ['type' => $type, 'category' => $category, 'title' => $title, 'description' => $description]
+                )->with('error', 'Appointment is fully booked on '.date('d/m/Y', strtotime($date)).'!');
+
+            }
+
+
+        }
+
+        $appointment = Appointment::where('id', $id)->first();
+
+        $appointment->type = $type;
+        $appointment->category = $category;
+        $appointment->title = $title;
+        $appointment->description = $description;
+        $appointment->date = $date;
+        $appointment->time = $time;
+        
+
+        $appointment->save();
+
+    
+        return redirect()->action(
+            [AppointmentController::class, 'show'], ['id' => $id, 'title' => $title]
+        )->with('success','Appointment '.$title. ' has been reschedule to '. date('l', strtotime($date)).', '.date('d/m/Y', strtotime($date)).' at '.date('G:i', strtotime($time)) .' successfully!');
+
     }
 
     /**
