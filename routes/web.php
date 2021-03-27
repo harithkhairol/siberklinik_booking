@@ -40,6 +40,8 @@ Route::post('/book/store', [AppointmentController::class, 'store'])->name('appoi
 
 Route::get('/appointment/{id}/{title}', [AppointmentController::class, 'show'])->name('appointment.show');
 
+Route::get('/appointment/{id}/{title}/edit', [AppointmentController::class, 'edit'])->name('appointment.edit');
+
 Route::post('/appointment/{id}/update', [AppointmentController::class, 'update'])->name('appointment.update');
 
 Route::get('/appointment/{id}/{title}/reschedule/date', [AppointmentController::class, 'rescheduleDate'])->name('appointment.reschedule.date');
@@ -47,3 +49,5 @@ Route::get('/appointment/{id}/{title}/reschedule/date', [AppointmentController::
 Route::get('/appointment/{id}/{title}/reschedule/date/time', [AppointmentController::class, 'rescheduleTime'])->name('appointment.reschedule.time');
 
 Route::post('/appointment/{id}/reschedule', [AppointmentController::class, 'reschedule'])->name('appointment.reschedule');
+
+Route::post('/appointment/{id}/delete', [AppointmentController::class, 'destroy'])->name('appointment.destroy');

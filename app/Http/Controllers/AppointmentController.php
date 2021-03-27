@@ -31,9 +31,7 @@ class AppointmentController extends Controller
 
         if(isset($_GET['search'])) {
 
-            $appointment_upcoming = Appointment::join(env('DB_DATABASE2').'.users', 'appointments.doctor_id', '=', 'users.id')
-                     ->select('appointments.*', 'users.name', 'users.phone_no')
-                     ->where('user_id', Auth::user()->id)
+            $appointment_upcoming = Appointment::where('user_id', Auth::user()->id)
                      ->where('date','>', now())
                      ->where(function ($query) {
                         $query->where('appointments.type', 'LIKE', '%' . $_GET['search'] . '%')
@@ -47,9 +45,7 @@ class AppointmentController extends Controller
         }
         else{
 
-            $appointment_upcoming = Appointment::join(env('DB_DATABASE2').'.users', 'appointments.doctor_id', '=', 'users.id')
-                     ->select('appointments.*', 'users.name', 'users.phone_no')
-                     ->where('user_id', Auth::user()->id)->where('date', '>', now())->orderBy('time', 'asc')->paginate(10);
+            $appointment_upcoming = Appointment::where('user_id', Auth::user()->id)->where('date', '>', now())->orderBy('time', 'asc')->paginate(10);
 
         }
 
@@ -73,7 +69,29 @@ class AppointmentController extends Controller
 
     public function history()
     {
-        return view('appointment.history');
+
+        if(isset($_GET['search'])) {
+
+            $appointment_history = Appointment::where('user_id', Auth::user()->id)
+                     ->where('date','<', now())
+                     ->where(function ($query) {
+                        $query->where('appointments.type', 'LIKE', '%' . $_GET['search'] . '%')
+                            ->orWhere('date', 'LIKE', '%' . $_GET['search'] . '%')
+                            ->orWhere('title', 'LIKE', '%' . $_GET['search'] . '%')
+                            ->orWhere('category', 'LIKE', '%' . $_GET['search'] . '%')
+                            ->orWhere('name', 'LIKE', '%' . $_GET['search'] . '%')
+                            ->orWhere('phone_no', 'LIKE', '%' . $_GET['search'] . '%');
+                    })->orderBy('date', 'asc')->orderBy('time', 'asc')->paginate(10);
+
+        }
+        else{
+
+            $appointment_history = Appointment::where('user_id', Auth::user()->id)->where('date', '<', now())->orderBy('date', 'asc')->orderBy('time', 'asc')->paginate(10);
+
+        }
+
+        return view('appointment.history', compact('appointment_history'));
+
     }
 
     public function book()
@@ -95,7 +113,7 @@ class AppointmentController extends Controller
         $title = $request->title;
         $description = $request->description;
 
-        $available_days = TimeSlot::where('doctor_id', '!=' , 0)->select('day')->groupBy('day')->pluck('day');
+        $available_days = TimeSlot::select('day')->groupBy('day')->pluck('day');
 
         return view('appointment.book-date', compact('type', 'category', 'title', 'description', 'available_days'));
     }
@@ -118,22 +136,26 @@ class AppointmentController extends Controller
 
         $day = date('l', strtotime($date));
 
-        $available_days = TimeSlot::where('doctor_id', '!=' , 0)->select('day')->groupBy('day')->pluck('day');
+        $available_days = TimeSlot::select('day')->groupBy('day')->pluck('day');
 
         $time_booked = Appointment::where('date', $date)->pluck('time');
+
+        $doctor_booked = Appointment::where('date', $date)->pluck('doctor_id');
 
         if($day == "Saturday" || $day == "Sunday"){
             return back()->with('error', 'No appointment for weekends!');
         }
 
-        $timeslots = TimeSlot::where('doctor_id', '!=' , 0)
-                            ->where('day', $day)
+        $timeslots = TimeSlot::where('day', $day)
                             ->pluck('time');
 
-        $available_timeslots = TimeSlot::where('doctor_id', '!=' , 0)
-                            ->where('day', $day)
-                            ->whereNotIn('time', $time_booked)
-                            ->pluck('time');
+        // $available_timeslots = TimeSlot::where('day', $day)
+        //                                 ->whereNotIn('time', $time_booked)
+        //                                 ->pluck('time');
+
+        $available_timeslots = TimeSlot::where('day', $day)
+                                        ->whereNotIn('doctor_id', $doctor_booked)
+                                        ->orderBy('time')->groupBy('time')->pluck('time');
 
         if(count($timeslots) < 1){
 
@@ -166,6 +188,34 @@ class AppointmentController extends Controller
         $date = $request->date;
         $time = $request->time;
 
+        $day = date('l', strtotime($date));
+
+        $doctor_booked = Appointment::where('date', $date)
+                                    ->where('time', $time)
+                                    ->pluck('doctor_id');
+
+        $timeslot = TimeSlot::where('day', $day)
+                            ->where('time', $time)
+                            ->whereNotIn('doctor_id', $doctor_booked)
+                            ->get();
+
+        if(count($timeslot) < 1){
+
+            return back()->with('error', 'Appointment has been fully booked on '.date('d/m/Y', strtotime($date)).'!');
+
+        }
+
+        $user_booked = Appointment::where('user_id', Auth::user()->id)
+                                    ->where('date', $date)
+                                    ->where('time', $time)
+                                    ->first();
+
+        if(isset($user_booked)){
+
+            return back()->with('error', 'You have book an appointment on '.date('d/m/Y', strtotime($date)).' at '.date('G:i', strtotime($time)).'!');
+
+        }
+
         return view('appointment.confirm', compact('type', 'category', 'title', 'description', 'date', 'time'));
 
     }
@@ -195,51 +245,40 @@ class AppointmentController extends Controller
         $time = $request->time;
 
         
-
         $day = date('l', strtotime($date));
+
+        $doctor_booked = Appointment::where('date', $date)
+                                    ->where('time', $time)
+                                    ->pluck('doctor_id');
 
         $timeslot = TimeSlot::where('day', $day)
                             ->where('time', $time)
+                            ->whereNotIn('doctor_id', $doctor_booked)
                             ->first();
+
+        if(!isset($timeslot)){
+
+            return redirect()->action(
+                [AppointmentController::class, 'bookTime'], ['type' => $type, 'category' => $category, 'title' => $title, 'description' => $description, 'date' => $date, 'time' => $time]
+            )->with('error', 'Appointment has been fully booked on '.date('d/m/Y', strtotime($date)).'!');
+
+        }
 
         $doctor = Doctor::where('id', $timeslot->doctor_id)->first();
 
-        $check_book = Appointment::where('date', $date)
-                                 ->where('time', $time)
-                                 ->get();
-
-        if(count($check_book) < 1){
-
-            $time_booked = Appointment::where('date', $date)->pluck('time');
-
-            $timeslots = TimeSlot::where('doctor_id', '!=' , 0)
-                            ->where('day', $day)
+        $timeslots = TimeSlot::where('day', $day)
+                            ->where('time', $time)
+                            ->whereNotIn('doctor_id', $doctor_booked)
                             ->pluck('time');
 
-            $available_timeslots = TimeSlot::where('doctor_id', '!=' , 0)
-                            ->where('day', $day)
-                            ->whereNotIn('time', $time_booked)
-                            ->pluck('time');
+        if(count($timeslots) < 1){
 
-            if(count($timeslots) < 1){
-
-                return redirect()->action(
-                    [AppointmentController::class, 'bookTime'], ['type' => $type, 'category' => $category, 'title' => $title, 'description' => $description, 'date' => $date, 'time' => $time]
-                )->with('error', 'Appointment has been booked on '.date('d/m/Y', strtotime($date)).' at '.date('G:i', strtotime($time)).'!');
-    
-            }
-    
-            if(count($available_timeslots) < 1){
-
-                return redirect()->action(
-                    [AppointmentController::class, 'bookDate'], ['type' => $type, 'category' => $category, 'title' => $title, 'description' => $description]
-                )->with('error', 'Appointment is fully booked on '.date('d/m/Y', strtotime($date)).'!');
-
-            }
-
+            return redirect()->action(
+                [AppointmentController::class, 'bookTime'], ['type' => $type, 'category' => $category, 'title' => $title, 'description' => $description, 'date' => $date, 'time' => $time]
+            )->with('error', 'Appointment has been booked on '.date('d/m/Y', strtotime($date)).' at '.date('G:i', strtotime($time)).'!');
 
         }
-    
+
         Appointment::create([
             'user_id' => Auth::user()->id,
             'doctor_id' => $doctor->id,
@@ -276,9 +315,11 @@ class AppointmentController extends Controller
      * @param  \App\Models\Appointment  $appointment
      * @return \Illuminate\Http\Response
      */
-    public function edit(Appointment $appointment)
+    public function edit($id, $title)
     {
-        //
+        $appointment = Appointment::where('id', $id)->first();
+
+        return view('appointment.edit', compact('appointment'));
     }
 
     /**
@@ -320,7 +361,7 @@ class AppointmentController extends Controller
 
         $appointment = Appointment::where('id', $id)->first();
 
-        $available_days = TimeSlot::where('doctor_id', '!=' , 0)->select('day')->groupBy('day')->pluck('day');
+        $available_days = TimeSlot::select('day')->groupBy('day')->pluck('day');
 
         return view('appointment.reschedule', compact('appointment', 'available_days'));
         
@@ -342,26 +383,35 @@ class AppointmentController extends Controller
         $description = $request->description;
         $date = $request->date;
 
+        //
+
+
+        //
+
         $appointment = Appointment::where('id', $id)->first();
 
         $day = date('l', strtotime($date));
 
-        $available_days = TimeSlot::where('doctor_id', '!=' , 0)->select('day')->groupBy('day')->pluck('day');
+        $available_days = TimeSlot::select('day')->groupBy('day')->pluck('day');
 
         $time_booked = Appointment::where('date', $date)->pluck('time');
+
+        $doctor_booked = Appointment::where('date', $date)->pluck('doctor_id');
 
         if($day == "Saturday" || $day == "Sunday"){
             return back()->with('error', 'No appointment for weekends!');
         }
 
-        $timeslots = TimeSlot::where('doctor_id', '!=' , 0)
-                            ->where('day', $day)
+        $timeslots = TimeSlot::where('day', $day)
                             ->pluck('time');
 
-        $available_timeslots = TimeSlot::where('doctor_id', '!=' , 0)
-                            ->where('day', $day)
-                            ->whereNotIn('time', $time_booked)
-                            ->pluck('time');
+        // $available_timeslots = TimeSlot::where('day', $day)
+        //                                 ->whereNotIn('time', $time_booked)
+        //                                 ->pluck('time');
+
+        $available_timeslots = TimeSlot::where('day', $day)
+                                        ->whereNotIn('doctor_id', $doctor_booked)
+                                        ->orderBy('time')->groupBy('time')->pluck('time');
 
         if(count($timeslots) < 1){
 
@@ -395,49 +445,37 @@ class AppointmentController extends Controller
         $date = $request->date;
         $time = $request->time;
 
-        
-
         $day = date('l', strtotime($date));
+
+        $doctor_booked = Appointment::where('date', $date)
+                                    ->where('time', $time)
+                                    ->pluck('doctor_id');
 
         $timeslot = TimeSlot::where('day', $day)
                             ->where('time', $time)
+                            ->whereNotIn('doctor_id', $doctor_booked)
                             ->first();
+
+        if(!isset($timeslot)){
+
+            return redirect()->action(
+                [AppointmentController::class, 'bookTime'], ['type' => $type, 'category' => $category, 'title' => $title, 'description' => $description, 'date' => $date, 'time' => $time]
+            )->with('error', 'Appointment has been fully booked on '.date('d/m/Y', strtotime($date)).'!');
+
+        }
 
         $doctor = Doctor::where('id', $timeslot->doctor_id)->first();
 
-        $check_book = Appointment::where('date', $date)
-                                 ->where('time', $time)
-                                 ->get();
-
-        if(count($check_book) < 1){
-
-            $time_booked = Appointment::where('date', $date)->pluck('time');
-
-            $timeslots = TimeSlot::where('doctor_id', '!=' , 0)
-                            ->where('day', $day)
+        $timeslots = TimeSlot::where('day', $day)
+                            ->where('time', $time)
+                            ->whereNotIn('doctor_id', $doctor_booked)
                             ->pluck('time');
 
-            $available_timeslots = TimeSlot::where('doctor_id', '!=' , 0)
-                            ->where('day', $day)
-                            ->whereNotIn('time', $time_booked)
-                            ->pluck('time');
+        if(count($timeslots) < 1){
 
-            if(count($timeslots) < 1){
-
-                return redirect()->action(
-                    [AppointmentController::class, 'bookTime'], ['type' => $type, 'category' => $category, 'title' => $title, 'description' => $description, 'date' => $date, 'time' => $time]
-                )->with('error', 'Appointment has been booked on '.date('d/m/Y', strtotime($date)).' at '.date('G:i', strtotime($time)).'!');
-    
-            }
-    
-            if(count($available_timeslots) < 1){
-
-                return redirect()->action(
-                    [AppointmentController::class, 'bookDate'], ['type' => $type, 'category' => $category, 'title' => $title, 'description' => $description]
-                )->with('error', 'Appointment is fully booked on '.date('d/m/Y', strtotime($date)).'!');
-
-            }
-
+            return redirect()->action(
+                [AppointmentController::class, 'bookTime'], ['type' => $type, 'category' => $category, 'title' => $title, 'description' => $description, 'date' => $date, 'time' => $time]
+            )->with('error', 'Appointment has been booked on '.date('d/m/Y', strtotime($date)).' at '.date('G:i', strtotime($time)).'!');
 
         }
 
@@ -455,7 +493,7 @@ class AppointmentController extends Controller
 
     
         return redirect()->action(
-            [AppointmentController::class, 'show'], ['id' => $id, 'title' => $title]
+            [AppointmentController::class, 'edit'], ['id' => $id, 'title' => $title]
         )->with('success','Appointment '.$title. ' has been reschedule to '. date('l', strtotime($date)).', '.date('d/m/Y', strtotime($date)).' at '.date('G:i', strtotime($time)) .' successfully!');
 
     }
@@ -466,8 +504,33 @@ class AppointmentController extends Controller
      * @param  \App\Models\Appointment  $appointment
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Appointment $appointment)
+    public function destroy(Request $request, $id)
     {
-        //
+
+        $appointment = Appointment::where('id', $id)->first();
+
+        $title = $appointment->title;
+
+        $appointment->delete();
+        
+        // if string contains the word 
+        if(strpos(url()->previous(), 'schedule') !== false){
+
+            return redirect()->action([AppointmentController::class, 'schedule'])->with('success','Appointment '.$title.' has been deleted successfully!');
+
+        } 
+
+        elseif(strpos(url()->previous(), 'history') !== false){
+
+            return redirect()->action([AppointmentController::class, 'history'])->with('success','Appointment '.$title.' has been deleted successfully!');
+
+        } 
+        
+        else{
+
+            abort(404);
+
+        }
+
     }
 }

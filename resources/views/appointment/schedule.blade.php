@@ -190,10 +190,10 @@
                                         <div class="flex items-center">                                    
                                             <div>
                                                 <div class="text-sm text-gray-900">
-                                                    {{ $appointment->doctor_name }}
+                                                    {{ $appointment->doctor->name }}
                                                 </div>
                                                 <div class="text-sm text-gray-500">
-                                                    {{ $appointment->phone_no }}
+                                                    {{ $appointment->doctor->phone_no }}
                                                 </div>
                                             </div>
                                         </div>
@@ -208,8 +208,8 @@
                                         <div class="text-sm text-gray-500">{{ $appointment->category }}</div>
                                     </td>
                                     <td class="flex px-6 py-6 whitespace-nowrap text-right text-sm font-medium space-x-3 items-center">
-                                        <a href="{{ route('appointment.show', [$appointment->id, $appointment->title]) }}" class="text-blue-500 hover:text-blue-900"><i data-feather="edit"></i></a>
-                                        <a href="#" class="text-blue-500 hover:text-blue-900"><i data-feather="x-circle"></i></a>
+                                        <a href="{{ route('appointment.edit', [$appointment->id, $appointment->title]) }}" class="text-blue-500 hover:text-blue-900"><i data-feather="edit"></i></a>
+                                        <a class="delete-modal text-blue-500 hover:text-blue-900 cursor-pointer" data-id="{{ $appointment->id }}" data-title="{{ $appointment->title }}"><i data-feather="x-circle"></i></a>
                         
                                     </td>
                                 
@@ -241,5 +241,35 @@
 
     </div>
 </div>
+
+<script>
+
+//removes the "active" class to .popup and .popup-content when the "Close" button is clicked 
+$(".delete-modal").on("click", function() {
+
+    let id = $(this).data('id');
+    let title = $(this).data('title');
+    
+    $("#modal").removeClass("hidden");
+    $("#modal-headline").text("Delete appointment "+title+"?");
+    $("#modal-content").text("Are you sure you want to delete appointment "+title+"?");
+    $('#modal-button').val(id);
+
+});
+
+$("#modal-button").on("click", function() {
+
+    let id = $('#modal-button').val();
+
+    $('#modal-action').attr("action", '/appointment/'+id+'/delete');
+    
+});
+
+
+$(".close-modal").on("click", function() {
+  $("#modal").addClass("hidden");
+});
+
+</script>
 
 @endsection
