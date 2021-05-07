@@ -18,20 +18,19 @@ class AppointmentController extends Controller
         $this->middleware(['auth']);
 
     }
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+    
     public function schedule()
     {
-        $appointments = Appointment::where('user_id', Auth::user()->id)->first();
+        $user_id = Auth::id();
+
+        $appointments = Appointment::where('user_id', $user_id)->first();
          
-        $appointment_today = Appointment::where('user_id', Auth::user()->id)->where('date', now())->orderBy('time', 'asc')->get();
+        $appointment_today = Appointment::where('user_id', $user_id)->where('date', now())->orderBy('time', 'asc')->get();
 
         if(isset($_GET['search'])) {
 
-            $appointment_upcoming = Appointment::where('user_id', Auth::user()->id)
+            $appointment_upcoming = Appointment::join(config('app.doctor_database').'.users', 'appointments.doctor_id', '=', 'users.id')
+                     ->select('appointments.*', 'users.name', 'users.phone_no')->where('user_id', $user_id)
                      ->where('date','>', now())
                      ->where(function ($query) {
                         $query->where('appointments.type', 'LIKE', '%' . $_GET['search'] . '%')
@@ -40,21 +39,21 @@ class AppointmentController extends Controller
                             ->orWhere('category', 'LIKE', '%' . $_GET['search'] . '%')
                             ->orWhere('name', 'LIKE', '%' . $_GET['search'] . '%')
                             ->orWhere('phone_no', 'LIKE', '%' . $_GET['search'] . '%');
-                    })->orderBy('time', 'asc')->paginate(10);
+                    })->orderBy('date', 'asc')->orderBy('time', 'asc')->paginate(10);
 
         }
         else{
 
-            $appointment_upcoming = Appointment::where('user_id', Auth::user()->id)->where('date', '>', now())->orderBy('time', 'asc')->paginate(10);
+            $appointment_upcoming = Appointment::where('user_id', $user_id)->where('date', '>', now())->orderBy('date', 'asc')->orderBy('time', 'asc')->paginate(10);
 
         }
 
-        $appointment_next_date = Appointment::where('user_id', Auth::user()->id)->where('date', '>', now())->first();
+        $appointment_next_date = Appointment::where('user_id', $user_id)->where('date', '>', now())->first();
         
 
         if(isset($appointment_next_date)){
             
-            $appointment_next = Appointment::where('user_id', Auth::user()->id)->where('date',  $appointment_next_date->date)->orderBy('time', 'asc')->get();  
+            $appointment_next = Appointment::where('user_id', $user_id)->where('date',  $appointment_next_date->date)->orderBy('time', 'asc')->get();  
 
         }
 
@@ -65,14 +64,18 @@ class AppointmentController extends Controller
         }
 
         return view('appointment.schedule', compact('appointments', 'appointment_today', 'appointment_next', 'appointment_next_date', 'appointment_upcoming'));
+
     }
 
     public function history()
     {
 
+        $user_id = Auth::id();
+
         if(isset($_GET['search'])) {
 
-            $appointment_history = Appointment::where('user_id', Auth::user()->id)
+            $appointment_history = Appointment::join(config('app.doctor_database').'.users', 'appointments.doctor_id', '=', 'users.id')
+                     ->select('appointments.*', 'users.name', 'users.phone_no')->where('user_id', $user_id)
                      ->where('date','<', now())
                      ->where(function ($query) {
                         $query->where('appointments.type', 'LIKE', '%' . $_GET['search'] . '%')
@@ -86,7 +89,7 @@ class AppointmentController extends Controller
         }
         else{
 
-            $appointment_history = Appointment::where('user_id', Auth::user()->id)->where('date', '<', now())->orderBy('date', 'asc')->orderBy('time', 'asc')->paginate(10);
+            $appointment_history = Appointment::where('user_id', $user_id)->where('date', '<', now())->orderBy('date', 'asc')->orderBy('time', 'asc')->paginate(10);
 
         }
 
@@ -205,7 +208,9 @@ class AppointmentController extends Controller
 
         }
 
-        $user_booked = Appointment::where('user_id', Auth::user()->id)
+        $user_id = Auth::id();
+
+        $user_booked = Appointment::where('user_id', $user_id)
                                     ->where('date', $date)
                                     ->where('time', $time)
                                     ->first();
@@ -220,14 +225,9 @@ class AppointmentController extends Controller
 
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
+        
         $validator = $request->validate([
             'type' => 'required',
             'category' => 'required',
@@ -279,29 +279,27 @@ class AppointmentController extends Controller
 
         }
 
-        Appointment::create([
-            'user_id' => Auth::user()->id,
-            'doctor_id' => $doctor->id,
-            'doctor_name' => $doctor->name,
-            'type' => $request->type,
-            'category' => $request->category,
-            'title' => $request->title,
-            'description' => $request->description,
-            'date' => $request->date,
-            'time' => $request->time,
-        ]);
+        $user_id = Auth::id();
+
+        $appointment = new Appointment;
+
+        $appointment->user_id = $user_id;
+        $appointment->doctor_id = $doctor->id;
+        $appointment->doctor_name = $doctor->name;
+        $appointment->type = $request->type;
+        $appointment->category = $request->category;
+        $appointment->title = $request->title;
+        $appointment->description = $request->description;
+        $appointment->date = $request->date;
+        $appointment->time = $request->time;
+
+        $appointment->save();
 
         return redirect()->action([AppointmentController::class, 'schedule'])->with('success','Appointment '.$title. ' on '. date('l', strtotime($date)).', '.date('d/m/Y', strtotime($date)).' at '.date('G:i', strtotime($time)) .' has been booked successfully!');
 
 
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Appointment  $appointment
-     * @return \Illuminate\Http\Response
-     */
     public function show($id, $title)
     {
         $appointment = Appointment::where('id', $id)->first();
@@ -309,12 +307,6 @@ class AppointmentController extends Controller
         return view('appointment.show', compact('appointment'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Appointment  $appointment
-     * @return \Illuminate\Http\Response
-     */
     public function edit($id, $title)
     {
         $appointment = Appointment::where('id', $id)->first();
@@ -322,13 +314,6 @@ class AppointmentController extends Controller
         return view('appointment.edit', compact('appointment'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Appointment  $appointment
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, $id)
     {
         $validator = $request->validate([
@@ -498,12 +483,6 @@ class AppointmentController extends Controller
 
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Appointment  $appointment
-     * @return \Illuminate\Http\Response
-     */
     public function destroy(Request $request, $id)
     {
 
@@ -528,7 +507,7 @@ class AppointmentController extends Controller
         
         else{
 
-            abort(404);
+            return redirect()->action([AppointmentController::class, 'schedule'])->with('success','Appointment '.$title.' has been deleted successfully!');
 
         }
 

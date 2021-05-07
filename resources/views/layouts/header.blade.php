@@ -44,8 +44,8 @@
                 <div class="flex items-center w-full bg-gray-100 p-4 rounded-lg">
 
                         <div>
-                            <h3 class="text-gray-900 font-semibold">John Doe</h3>
-                            <h4 class="text-sm text-gray-700 mt-1">johndoe@gmail.com</h4>
+                            <h3 class="text-gray-900 font-semibold">{{ Auth::user()->name }}</h3>
+                            <h4 class="text-sm text-gray-700 mt-1">{{ Auth::user()->email }}</h4>
                             
                         </div>
                     </div>

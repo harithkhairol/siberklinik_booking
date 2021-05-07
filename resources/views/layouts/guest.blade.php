@@ -3,14 +3,15 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <!-- Fonts -->
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap">
         <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 
         <title>@yield('title')</title> 
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-
+        <script src="{{ asset('js/jquery.min.js') }}"></script>
+        <script src="{{ asset('js/feather.min.js') }}"></script>
+        
         <!-- Fonts -->
 
         <!-- Scripts -->
@@ -280,25 +281,5 @@
     
 </html>
 
-<script>
 
-
-$("#navBtn").click(function(){
-  $("#navMobile").toggle();
-});
-
-$("#navMobileClose").click(function(){
-  $("#navMobile").toggle();
-});
-
-feather.replace();
-
-$("#close-notification").click(function() {
-    
-    $("#notification").fadeOut("fast", function() {
-        $("#notification").remove();
-    });
-
-});
-
-</script>
+<script src="{{ asset('js/guest-footer.js') }}"></script>

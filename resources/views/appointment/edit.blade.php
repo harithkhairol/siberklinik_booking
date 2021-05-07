@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', "Booking Date")
+@section('title', $appointment->title)
 @section('content')
 
 <div class="w-full md:p-8 p-3 space-y-4">
@@ -189,41 +189,8 @@
 
 </div>
 
-<script>
+<script nonce="HiKXla3KMpqbUaEPadLeV5607Yl/7/uTaSOa">var url = "{{ config('app.url') }}";</script>
 
-$("#more").click(function(){
-
-    $("#more-menu").toggle();    
-
-});
-
-//removes the "active" class to .popup and .popup-content when the "Close" button is clicked 
-$(".delete-modal").on("click", function() {
-
-let id = $(this).data('id');
-let title = $(this).data('title');
-
-$("#modal").removeClass("hidden");
-$("#modal-headline").text("Delete appointment "+title+"?");
-$("#modal-content").text("Are you sure you want to delete appointment "+title+"?");
-$('#modal-button').val(id);
-
-});
-
-$("#modal-button").on("click", function() {
-
-let id = $('#modal-button').val();
-
-$('#modal-action').attr("action", '/appointment/'+id+'/delete');
-
-});
-
-
-$(".close-modal").on("click", function() {
-$("#modal").addClass("hidden");
-});
-
-
-</script>
+<script src="{{ asset('js/edit.js') }}"></script>
 
 @endsection

@@ -35,6 +35,10 @@
                             <h2>{{ date('G:i', strtotime($appointment->time)) }}</h2>
                         </div>
 
+                        <div class="flex-initial">
+                            <a href="{{ route('appointment.edit', [$appointment->id, $appointment->title]) }}" class="text-blue-500 hover:text-blue-900"><i data-feather="edit"></i></a>                        
+                        </div>
+
                     </div>
 
                 @empty
@@ -93,6 +97,10 @@
 
                             <div class="flex-initial">
                                 <h2>{{ date('G:i', strtotime($appointment->time)) }}</h2>
+                            </div>
+
+                            <div class="flex-initial">
+                                <a href="{{ route('appointment.edit', [$appointment->id, $appointment->title]) }}" class="text-blue-500 hover:text-blue-900"><i data-feather="edit"></i></a>                        
                             </div>
 
                         </div>
@@ -242,34 +250,6 @@
     </div>
 </div>
 
-<script>
-
-//removes the "active" class to .popup and .popup-content when the "Close" button is clicked 
-$(".delete-modal").on("click", function() {
-
-    let id = $(this).data('id');
-    let title = $(this).data('title');
-    
-    $("#modal").removeClass("hidden");
-    $("#modal-headline").text("Delete appointment "+title+"?");
-    $("#modal-content").text("Are you sure you want to delete appointment "+title+"?");
-    $('#modal-button').val(id);
-
-});
-
-$("#modal-button").on("click", function() {
-
-    let id = $('#modal-button').val();
-
-    $('#modal-action').attr("action", '/appointment/'+id+'/delete');
-    
-});
-
-
-$(".close-modal").on("click", function() {
-  $("#modal").addClass("hidden");
-});
-
-</script>
+<script src="{{ asset('js/schedule.js') }}"></script>
 
 @endsection

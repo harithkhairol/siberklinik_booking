@@ -98,16 +98,25 @@
 
             <div class="flex items-center w-full bg-gray-100 p-4 rounded-lg">
                 <div>
-                    <h3 class="text-gray-900 font-semibold">John Doe</h3>
-                    <h4 class="text-sm text-gray-700 mt-1">johndoe@gmail.com</h4>
+                    <h3 class="text-gray-900 font-semibold">{{ Auth::user()->name }}</h3>
+                    <h4 class="text-sm text-gray-700 mt-1">{{ Auth::user()->email }}</h4>
                     
                 </div>
             </div>
 
             <div>
-                <a href="#" class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-red-600 hover:bg-red-700">
-                    Log Out
-                </a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+
+                    <a href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();" class="flex items-center text-gray-600 py-2 cursor-pointer hover:bg-gray-100 text-gray-500 hover:text-gray-900 pl-2 pr-6 rounded-lg" role="menuitem">
+                
+                        <span class="w-8 h-8 p-1 mr-4">
+                            <i data-feather="power"></i>
+                        </span> 
+                    
+                    <span>{{ __('Logout') }}</span> </a>
+
+                </form>
             </div>
         </div>
     </div>
